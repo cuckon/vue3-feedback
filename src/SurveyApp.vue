@@ -1,12 +1,19 @@
 <script setup>
 import EngineerPanel from './components/EngineerPanel.vue'
 import Divider from './components/Divider.vue'
-import {ref} from 'vue'
+import {ref, reactive} from 'vue'
 
-const Engineers = [
+const engineers = [
     '苏', '张'
 ]
-const EngineersSelected = ref([])
+const engineersSelected = ref([])
+
+const onSubmit = () => {
+    console.log(JSON.stringify(feedbackResults.value))
+}
+
+const feedbackResults = ref({})
+
 </script>
 
 <template>
@@ -16,19 +23,23 @@ const EngineersSelected = ref([])
         </el-header>
         <el-main>
             <p>请添加要评价的人。</p>
-            <el-select multiple v-model="EngineersSelected">
+            <el-select multiple v-model="engineersSelected">
                 <el-option
-                v-for="Engineer in Engineers"
-                :key="Engineer"
-                :label="Engineer"
-                :value="Engineer"
+                v-for="engineer in engineers"
+                :key="engineer"
+                :label="engineer"
+                :value="engineer"
                 />
             </el-select>
             <el-form label-width="300px" label-position="right">
-                <div v-for="Engineer in EngineersSelected">
+                <div v-for="(engineer, index) in engineersSelected">
                     <Divider/>
-                    <EngineerPanel :name="Engineer" />
+                    <EngineerPanel :name="engineer"
+                    v-model:result="feedbackResults[index]"/>
                 </div>
+
+                <Divider/>
+                <el-button @click="onSubmit">提交</el-button>
             </el-form>
         </el-main>
     </el-container>
