@@ -2,61 +2,46 @@
 import EngineerPanel from './components/EngineerPanel.vue'
 import Divider from './components/Divider.vue'
 import {ref} from 'vue'
-import { useFetch } from '@vueuse/core'
-
 
 const engineers = [
     '苏', '张'
 ]
 const engineersSelected = ref([])
 
-const { isFetching, isFinished, execute } = useFetch('http://127.0.0.1:8000/feedbacks', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  immediate: false,
-  body:  JSON.stringify({
-        user: 'William Ding',
-        time: '2021-08-634',
-        // feedbacks: [
-        //     {
-        //         to: 'John',
-        //         rate: 5,
-        //         good_comment: 'Great',
-        //         bad_comment: 'haheh'
-        //     },
-        //     {
-        //         to: 'Mary',
-        //         rate: 4,
-        //         good_comment: 'Good',
-        //         bad_comment: 'h'
-        //     },
-        // ]
-    })
-}).post().json()
-
-const onSubmit = () => {
-    const feedbackData = {
-        user: 'William Ding',
-        time: '2021-08-19 16:34',
-        // feedbacks: [
-        //     {
-        //         to: 'John',
-        //         rate: 5,
-        //         good_comment: 'Great',
-        //         bad_comment: 'haheh'
-        //     },
-        //     {
-        //         to: 'Mary',
-        //         rate: 4,
-        //         good_comment: 'Good',
-        //         bad_comment: 'h'
-        //     },
-        // ]
+async function onSubmit() {
+    try{
+        const resp = await fetch(
+            'http://127.0.0.1:8000/feedbacks',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:  JSON.stringify({
+                    user: 'William Ding',
+                    timestamp: Date.now(),
+                    feedbacks: [
+                        {
+                            to: 'John',
+                            rate: 5,
+                            good_comment: 'Great!!!',
+                            bad_comment: 'haheh'
+                        },
+                        {
+                            to: 'Mary',
+                            rate: 4,
+                            good_comment: 'Good',
+                            bad_comment: 'h'
+                        },
+                    ]
+                })
+            })
+        const data = await resp.json()
+        console.log(data)
+    } catch(error) {
+        console.error(error)
     }
 
-    execute(feedbackData)
 }
 
 const feedbackResults = ref({})

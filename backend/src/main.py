@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,8 +22,8 @@ class PerFeedback(BaseModel):
 
 class Feedback(BaseModel):
     user: str
-    time: str
-    #feedbacks: List[PerFeedback]
+    timestamp: int
+    feedbacks: List[PerFeedback]
 
 
 @app.get('/engineers')
@@ -34,15 +34,11 @@ async def get_engineers():
     ]
 
 
-# @app.post('/feedbacks')
-# async def post_feedback(feedback: Feedback):
-#     return 'Received feedbacks from {}'.format(feedback.user)
-
-
-
 @app.post('/feedbacks')
-async def post_feedback():
-    return 'Received feedbacks'
+async def post_feedback(feedback: Feedback):
+    print(feedback)
+    return 'Received feedbacks from {}'.format(feedback.user)
+
 
 @app.get('/')
 async def root():
