@@ -7,8 +7,22 @@ const engineers = [
     '苏', '张'
 ]
 const engineersSelected = ref([])
+const isFetching = ref(false)
 
 async function onSubmit() {
+    isFetching.value = true
+    let feedbacks = []
+    engineersSelected.value.forEach((eng, index)=>{
+        const feedbackValue = feedbackResults.value[index]
+
+        feedbacks[index] = {
+            to: eng,
+            rate: feedbackValue.rate,
+            good_comment: feedbackValue.goodFeedback,
+            bad_comment: feedbackValue.badFeedback,
+        }
+    })
+
     try{
         const resp = await fetch(
             'http://127.0.0.1:8000/feedbacks',
@@ -20,20 +34,7 @@ async function onSubmit() {
                 body:  JSON.stringify({
                     user: 'William Ding',
                     timestamp: Date.now(),
-                    feedbacks: [
-                        {
-                            to: 'John',
-                            rate: 5,
-                            good_comment: 'Great!!!',
-                            bad_comment: 'haheh'
-                        },
-                        {
-                            to: 'Mary',
-                            rate: 4,
-                            good_comment: 'Good',
-                            bad_comment: 'h'
-                        },
-                    ]
+                    feedbacks: feedbacks
                 })
             })
         const data = await resp.json()
