@@ -1,13 +1,14 @@
 <script setup>
 import EngineerPanel from './components/EngineerPanel.vue'
 import Divider from './components/Divider.vue'
-import {ref, onMounted} from 'vue'
+import EngineersSelector from './components/EngineersSelector.vue'
+import {ref, getCurrentInstance} from 'vue'
 
-const engineers = ref([])
-const engineersSelected = ref([])
 const isFetching = ref(false)
 const feedbackResults = ref({})
-const domain = 'http://127.0.0.1:8000'
+const feedbacker = ref('丁磊')
+const engineersSelected = ref([])
+const domain = getCurrentInstance().appContext.config.globalProperties.$domain
 
 async function onSubmit() {
     isFetching.value = true
@@ -44,13 +45,6 @@ async function onSubmit() {
     }
 
 }
-
-onMounted(async () => {
-    const resp = await fetch(domain + '/engineers')
-    const json = await resp.json()
-    engineers.value = json
-})
-
 </script>
 
 <template>
@@ -60,14 +54,9 @@ onMounted(async () => {
         </el-header>
         <el-main>
             <p>请添加要评价的人。</p>
-            <el-select multiple v-model="engineersSelected">
-                <el-option
-                v-for="engineer in engineers"
-                :key="engineer"
-                :label="engineer"
-                :value="engineer"
-                />
-            </el-select>
+            <EngineersSelector :feedbacker="feedbacker"
+                v-model:engineersSelected="engineersSelected"/>
+
             <el-form label-width="300px" label-position="right">
                 <div v-for="(engineer, index) in engineersSelected">
                     <Divider/>
