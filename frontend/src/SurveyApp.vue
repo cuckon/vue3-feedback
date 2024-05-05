@@ -1,13 +1,13 @@
 <script setup>
 import EngineerPanel from './components/EngineerPanel.vue'
 import Divider from './components/Divider.vue'
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
 
-const engineers = [
-    '苏', '张'
-]
+const engineers = ref([])
 const engineersSelected = ref([])
 const isFetching = ref(false)
+const feedbackResults = ref({})
+const domain = 'http://127.0.0.1:8000'
 
 async function onSubmit() {
     isFetching.value = true
@@ -25,7 +25,7 @@ async function onSubmit() {
 
     try{
         const resp = await fetch(
-            'http://127.0.0.1:8000/feedbacks',
+            domain + '/feedbacks',
             {
                 method: 'POST',
                 headers: {
@@ -45,7 +45,11 @@ async function onSubmit() {
 
 }
 
-const feedbackResults = ref({})
+onMounted(async () => {
+    const resp = await fetch(domain + '/engineers')
+    const json = await resp.json()
+    engineers.value = json
+})
 
 </script>
 
