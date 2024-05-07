@@ -2,7 +2,7 @@
     import { StarFilled } from '@element-plus/icons-vue'
 </script>
 <template>
-            <el-divider border-style="dashed"><div class="gray dark">❤️</div></el-divider>
+    <el-divider border-style="dashed"><div class="gray">❤️</div></el-divider>
 </template>
 
 <style scoped>
@@ -12,7 +12,7 @@
 }
 
 .dark {
-    --el-bg-color: #626aef;
+    background-color: #626aef !important;
     color: blue;
 }
 </style>

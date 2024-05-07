@@ -5,6 +5,8 @@ import EngineersSelector from './components/EngineersSelector.vue'
 import {ref, getCurrentInstance} from 'vue'
 
 const isFetching = ref(false)
+const hasSubmitted = ref(false)
+const failedToSubmit = ref(false)
 const feedbackResults = ref({})
 const feedbacker = ref('丁磊')
 const engineersSelected = ref([])
@@ -40,8 +42,10 @@ async function onSubmit() {
             })
         const data = await resp.json()
         console.log(data)
+        hasSubmitted.value = true
     } catch(error) {
         console.error(error)
+        failedToSubmit.value = true
     }
 
 }
@@ -65,7 +69,10 @@ async function onSubmit() {
                 </div>
 
                 <Divider/>
+
                 <el-button @click="onSubmit" :disabled="isFetching">提交</el-button>
+                <el-text v-if="hasSubmitted" type="success"> 提交成功</el-text>
+                <el-text v-if="failedToSubmit" type="danger"> 提交失败</el-text>
             </el-form>
         </el-main>
     </el-container>
