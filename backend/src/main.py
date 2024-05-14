@@ -1,7 +1,13 @@
 from typing import List, Optional
+import functools
+import motor
+
 from fastapi import FastAPI, Body, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+
+MONGODB_URL = 'mongodb://root:root@pipe.rs.netease.com:23017'
+
 
 app = FastAPI()
 
@@ -12,6 +18,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@functools.lru_cache
+def get_db():
+    DB_CLIENT = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL).hive
+    return DB_CLIENT
 
 class PerFeedback(BaseModel):
     to: str
@@ -46,6 +58,7 @@ async def get_engineers(feedbacker:str = None):
 
 @app.post('/feedbacks')
 async def post_feedback(feedback: Feedback):
+
     print(feedback)
     return 'Received feedbacks from {}'.format(feedback.user)
 

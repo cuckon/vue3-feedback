@@ -8,7 +8,7 @@ const isFetching = ref(false)
 const hasSubmitted = ref(false)
 const failedToSubmit = ref(false)
 const feedbackResults = ref({})
-const feedbacker = ref('丁磊')
+const feedbacker = ref('John')
 const engineersSelected = ref([])
 const domain = getCurrentInstance().appContext.config.globalProperties.$domain
 
@@ -35,7 +35,7 @@ async function onSubmit() {
                     'Content-Type': 'application/json'
                 },
                 body:  JSON.stringify({
-                    user: 'William Ding',
+                    user: feedbacker.value,
                     timestamp: Date.now(),
                     feedbacks: feedbacks
                 })
