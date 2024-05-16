@@ -40,9 +40,14 @@ async function onSubmit() {
                     feedbacks: feedbacks
                 })
             })
-        const data = await resp.json()
-        console.log(data)
-        hasSubmitted.value = true
+        if (resp.status != 200){
+            console.error(error)
+            failedToSubmit.value = true
+        } else {
+            const data = await resp.json()
+            console.log(data)
+            hasSubmitted.value = true
+        }
     } catch(error) {
         console.error(error)
         failedToSubmit.value = true

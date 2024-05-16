@@ -1,8 +1,8 @@
 from typing import List, Optional
 import functools
-import motor
+import motor.motor_asyncio
 
-from fastapi import FastAPI, Body, Request
+from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,7 +22,9 @@ app.add_middleware(
 
 @functools.lru_cache
 def get_db():
-    DB_CLIENT = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL).hive
+    DB_CLIENT = motor.motor_asyncio.AsyncIOMotorClient(
+        MONGODB_URL
+    )['feedback']
     return DB_CLIENT
 
 class PerFeedback(BaseModel):
@@ -58,9 +60,15 @@ async def get_engineers(feedbacker:str = None):
 
 @app.post('/feedbacks')
 async def post_feedback(feedback: Feedback):
-
-    print(feedback)
-    return 'Received feedbacks from {}'.format(feedback.user)
+    if not feedback.feedbacks:
+        raise HTTPException(status_code=422, detail='no feedbacks')
+    db = get_db()
+    collection = db['feedbacks']
+    base_data = feedback.dict(exclude={'feedbacks'})
+    docs = [
+        {**base_data, **f.dict()} for f in feedback.feedbacks
+    ]
+    await collection.insert_many(docs)
 
 
 @app.get('/')
