@@ -44,26 +44,15 @@ class Feedback(BaseModel):
 async def get_data_from_db():
     db = get_db()
     collection = db['feedbacks']
+    await collection.create_index([('to', 1), ('user', 1)])
     pipeline = [
-        {"$group": {
-            "_id": "$to",
-            "data": {
-                "$push": {
-                    "user": "$user",
-                    "timestamp": "$timestamp",
-                    "rate": "$rate",
-                    "good_comment":
-                    "$good_comment",
-                    "bad_comment":
-                    "$bad_comment"
-                }
-            }
-        }},
-        {"$project": {"_id": 0, "to": "$_id", "data": 1}},
-        {"$sort": {"user": 1}},
+        {'$match': {}},
+        {'$sort': {'to': 1, 'user': 1}},
+        {'$project': {'_id': 0}},
     ]
-    result = [doc async for doc in collection.aggregate(pipeline)]
-    return result
+    result = collection.aggregate(pipeline)
+    return await result.to_list(length=None)
+
 
 def write_excel(data):
     import xlwt
@@ -73,7 +62,7 @@ def write_excel(data):
     pattern = xlwt.Pattern()
     pattern.pattern = xlwt.Pattern.SOLID_PATTERN
     pattern.pattern_fore_colour = xlwt.Style.colour_map['gray25']
-    style_date.pattern = pattern
+    style_title.pattern = pattern
 
     style_date = xlwt.easyxf(num_format_str='D-MMM-YY')
     wb = xlwt.Workbook()
@@ -82,44 +71,36 @@ def write_excel(data):
     current_ln = 0
 
     # write header
-    ws.write(0, 0, 'Feedbacker', style_title)
-    ws.write(0, 1, 'date', style_title)
-    ws.write(0, 2, 'to', style_title)
-    ws.write(0, 3, 'rate', style_title)
-    ws.write(0, 4, 'good_comment', style_title)
-    ws.write(0, 5, 'bad_comment', style_title)
+    ws.write(current_ln, 0, 'Feedbacker', style_title)
+    ws.write(current_ln, 1, 'Date', style_title)
+    ws.write(current_ln, 2, 'To', style_title)
+    ws.write(current_ln, 3, 'Rate', style_title)
+    ws.write(current_ln, 4, 'Good Comment', style_title)
+    ws.write(current_ln, 5, 'Bad Comment', style_title)
+
+    current_ln += 1
 
     for per_feedback_engineer in data:
         ws.write(current_ln, 0, per_feedback_engineer['user'])
-        # TODO: full header
 
-        ws.write(
-            current_ln, 1,
-            datetime.fromtimestamp(per_feedback_engineer['data']['timestamp']),
-            style_date
-        )
-        ws.write(current_ln, 2, per_feedback_engineer['data']['user'])
-        ws.write(current_ln, 3, per_feedback_engineer['data']['rate'])
-        ws.write(current_ln, 3, per_feedback_engineer['data']['good_comment'])
-        ws.write(current_ln, 3, per_feedback_engineer['data']['bad_comment'])
+        timestamp = per_feedback_engineer['timestamp'] / 1000
+        date_data = datetime.fromtimestamp(timestamp)
+        ws.write(current_ln, 1, date_data, style_date)
+
+        ws.write(current_ln, 2, per_feedback_engineer['to'])
+        ws.write(current_ln, 3, per_feedback_engineer['rate'])
+        ws.write(current_ln, 4, per_feedback_engineer['good_comment'])
+        ws.write(current_ln, 5, per_feedback_engineer['bad_comment'])
         current_ln += 1
 
+    wb.save('d:/tmp/feedbacks.xls')
 
 
 @app.get('/download_summary')
 async def download_summary():
 
-    return await get_data_from_db()
-
-    import xlwt
-    from datetime import datetime
-
-
-    ws.write(0, 0, 'Feedbacker')
-    ws.write(1, 0, datetime.now(), style_date)
-    ws.write(2, 0, 'Feedbacker')
-
-
+    data = await get_data_from_db()
+    write_excel(data)
 
 
 @app.get('/engineers')
