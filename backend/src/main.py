@@ -1,8 +1,11 @@
-from typing import List, Optional
+from typing import List
+from datetime import datetime
 import functools
+import tempfile
 import motor.motor_asyncio
 
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -41,12 +44,18 @@ class Feedback(BaseModel):
     feedbacks: List[PerFeedback]
 
 
-async def get_data_from_db():
+async def get_data_from_db(timestamp_start, timestamp_end):
     db = get_db()
     collection = db['feedbacks']
     await collection.create_index([('to', 1), ('user', 1)])
+    if timestamp_end == -1:
+        timestamp_end = int(datetime.now().timestamp() * 1000)
+    if timestamp_start == -1:
+        timestamp_start = timestamp_end - 3600 * 24 * 30 * 1000
     pipeline = [
-        {'$match': {}},
+        {'$match': {
+            'timestamp': {'$gte': timestamp_start, '$lte': timestamp_end}}
+        },
         {'$sort': {'to': 1, 'user': 1}},
         {'$project': {'_id': 0}},
     ]
@@ -56,7 +65,6 @@ async def get_data_from_db():
 
 def write_excel(data):
     import xlwt
-    from datetime import datetime
 
     style_title = xlwt.easyxf('font:bold on')
     pattern = xlwt.Pattern()
@@ -93,14 +101,16 @@ def write_excel(data):
         ws.write(current_ln, 5, per_feedback_engineer['bad_comment'])
         current_ln += 1
 
-    wb.save('d:/tmp/feedbacks.xls')
+    file_path = tempfile.gettempdir() + '/feedbacks.xls'
+    wb.save(file_path)
+    return file_path
 
 
 @app.get('/download_summary')
-async def download_summary():
-
-    data = await get_data_from_db()
-    write_excel(data)
+async def download_summary(timestamp_start: int = -1, timestamp_end: int = -1):
+    data = await get_data_from_db(timestamp_start, timestamp_end)
+    path = write_excel(data)
+    return FileResponse(path, filename='feedbacks.xls')
 
 
 @app.get('/engineers')
